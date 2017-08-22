@@ -114,9 +114,12 @@ $(GEOM_OVERLAP_CHECK): $(GEOM_GDML) macros/overlapCheck.cpp
 
 ##### Define output targets
 
+# Make output dir
+$(OUTPUT_DIRS):
+	mkdir -p $@
+
 # Conversion of promc truth file to slcio
-output/%_truth.slcio: input/%.promc
-	mkdir -p $(@D)
+output/%_truth.slcio: input/%.promc $(OUTPUT_DIRS)
 	java $(JAVA_OPTS) promc2lcio $(abspath $<) $(abspath $@) \
 		&> $@.log
 
