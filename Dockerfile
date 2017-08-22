@@ -1,5 +1,12 @@
 FROM argonneeic/fpadsim:v1.4
 
-ADD . /opt/SiFCCH
+ENV WORKFLOW_PATH /opt/SiFCC
 
-RUN sudo chown -R fpadsimuser:fpadsimuser /opt/SiFCCH
+ADD . $WORKFLOW_PATH
+
+RUN sudo chown -R fpadsimuser:fpadsimuser $WORKFLOW_PATH
+
+RUN sudo pacman -S --noconfirm \
+	vim \
+	openssh \
+	procps-ng

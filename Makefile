@@ -52,13 +52,13 @@ ifeq ($(MAKECMDGOALS),osg)
 .INTERMEDIATE: $(OUTPUT_TRUTH) $(OUTPUT_SIM) $(OUTPUT_TRACKING) $(OUTPUT_PANDORA)
 endif
 
-.PHONY: all geom osg sim clean allclean
+.PHONY: all geom hepsim sim clean allclean
 
 all: $(OUTPUT) $(GEOM) $(STRATEGIES)
 
 geom: $(GEOM) $(STRATEGIES)
 
-osg: $(OUTPUT_HEPSIM)
+hepsim: $(OUTPUT_HEPSIM)
 
 sim: $(OUTPUT_SIM)
 
