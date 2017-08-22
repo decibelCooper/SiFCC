@@ -6,6 +6,8 @@ ADD . $WORKFLOW_PATH
 
 RUN sudo chown -R fpadsimuser:fpadsimuser $WORKFLOW_PATH
 
+WORKDIR $WORKFLOW_PATH
+
 RUN sudo pacman -S --noconfirm \
 	vim \
 	openssh \

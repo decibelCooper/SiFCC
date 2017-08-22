@@ -8,9 +8,8 @@ This repository provides detector geometry, simulation and reconstruction parame
 docker build -t sifcc .
 docker run -it sifcc
 ```
-3. Initialize the geometry
+3. Initialize the geometry (optional, otherwise it is initialized prior to simulation/reconstruction)
 ```shell
-cd $WORKFLOW_PATH
 make
 ```
 4. Get truth-level files for input...
