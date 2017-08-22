@@ -1,0 +1,12 @@
+# S.Chekanov
+# HCAL:
+# dE(Fe)=1.451 [MeV/g/cm2] * 7.8 [g/cm3] *2.75 = 31.12
+# dE(scint)=1.936 [MeV/g/cm3] * 1.03 [g/cm3] * 0.5= 0.997
+# samplingF=0.997/(31.12+0.997) = 0.031 
+#  
+# ECAL (layer 1):
+# http://pdg.lbl.gov/2011/AtomicNuclearProperties/HTML_PAGES/014.html
+# dE(W)= 1.145  [MeV/g/cm2] * 19.3 g cm-3 * 0.3 cm = 6.63 
+# dE(Sil) =  1.664 [MeV/g/cm2] *  2.33 cm-3 * 0.032 = 0.1240 
+# samplingFr=0.1240/(6.63+0.12) = 0.0184,  last 10 layers: 0.0092 (x 2 thicker absorber) 
+
