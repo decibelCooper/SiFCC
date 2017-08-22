@@ -73,9 +73,6 @@ CONDITIONS_OPTS=-Dorg.lcsim.cacheDir=$(PWD) -Duser.home=$(PWD)
 
 ##### Define geometry targets
 
-$(GEOM_PATH)/compact.xml: $(GEOM_PATH)/compact_dd4hep.xml
-	cat $< | sed 's/<includes>.*<\/includes>//;s/type="solenoid"/type="Solenoid"/;s/\<T\>/1/g' > $@
-
 $(GEOM_LCDD): $(GEOM_PATH)/compact.xml
 	java $(JAVA_OPTS) $(CONDITIONS_OPTS) -jar $(GCONVERTER) -o lcdd $< $@
 
@@ -93,27 +90,27 @@ $(GEOM_PANDORA): $(GEOM_PATH)/compact.xml $$(LCSIM_CONDITIONS)
 
 $(PWD)/.lcsim/cache/$(LCSIM_CONDITIONS_PREFIX_ESCAPED)%.zip: $(GEOM_HEPREP)
 	mkdir -p $(@D)
-	cd geom/$* && zip -r $@ * &> $@.log
+	cd $(GEOM_PATH) && zip -r $@ * &> $@.log
 
 $(GEOM_OVERLAP_CHECK): $(GEOM_GDML) macros/overlapCheck.cpp
 	root -b -q -l "macros/overlapCheck.cpp(\"$<\");" | tee $@
 
 ##### Define tracking strategy list target
 
-$(STRATEGIES): $(GEOM_PATH)/compact.xml $(GEOM_PATH)/config/prototypeStrategy.xml \
-			$(GEOM_PATH)/config/layerWeights.xml $$(LCSIM_CONDITIONS)
-	if [ -f $(GEOM_PATH)/config/trainingSample.slcio ]; \
-		then java $(JAVA_OPTS) $(CONDITIONS_OPTS) \
-			-jar $(CLICSOFT)/distribution/target/lcsim-distribution-*-bin.jar \
-			-DprototypeStrategyFile=$(GEOM_PATH)/config/prototypeStrategy.xml \
-			-DlayerWeightsFile=$(GEOM_PATH)/config/layerWeights.xml \
-			-DtrainingSampleFile=$(GEOM_PATH)/config/trainingSample.slcio \
-			-DoutputStrategyFile=$@ \
-			$(GEOM_PATH)/config/strategyBuilder.xml \
-			&> $@.log; \
-	else \
-		touch $@; \
-	fi
+#$(STRATEGIES): $(GEOM_PATH)/compact.xml $(GEOM_PATH)/config/prototypeStrategy.xml \
+#			$(GEOM_PATH)/config/layerWeights.xml $$(LCSIM_CONDITIONS)
+#	if [ -f $(GEOM_PATH)/config/trainingSample.slcio ]; \
+#		then java $(JAVA_OPTS) $(CONDITIONS_OPTS) \
+#			-jar $(CLICSOFT)/distribution/target/lcsim-distribution-*-bin.jar \
+#			-DprototypeStrategyFile=$(GEOM_PATH)/config/prototypeStrategy.xml \
+#			-DlayerWeightsFile=$(GEOM_PATH)/config/layerWeights.xml \
+#			-DtrainingSampleFile=$(GEOM_PATH)/config/trainingSample.slcio \
+#			-DoutputStrategyFile=$@ \
+#			$(GEOM_PATH)/config/strategyBuilder.xml \
+#			&> $@.log; \
+#	else \
+#		touch $@; \
+#	fi
 
 ##### Define output targets
 
