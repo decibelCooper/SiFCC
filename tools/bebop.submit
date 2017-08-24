@@ -1,0 +1,32 @@
+#!/bin/bash
+#SBATCH -p bdwall
+#SBATCH -N 1
+#SBATCH --time=1:00:00
+
+echo 4 > nEventsPerRun
+singularityImage="../fpadsim-v1.4.img"
+files=$(find input -iname "*.promc")
+
+function runTask {
+	srun -n1 -c$SLURM_JOB_CPUS_PER_NODE singularity exec $singularityImage bash -lc "make -j$(($SLURM_JOB_CPUS_PER_NODE + 1)) $1" &
+}
+
+singularity exec $singularityImage bash -lc "make -j4 init"
+
+i=0
+for file in $files; do
+	targets="$targets $(echo $file | sed 's/^input\//output\//' | sed 's/\.promc/_hepsim.slcio/')"
+
+	i=$(($i + 1))
+
+	if [ "$(($i % $SLURM_JOB_CPUS_PER_NODE))" == "0" ]; then
+		runTask "$targets"
+		targets=""
+	fi
+done
+
+if [ "$targets" != "" ]; then
+	runTask "$targets"
+fi
+
+wait

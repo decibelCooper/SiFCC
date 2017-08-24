@@ -28,19 +28,19 @@ INPUT_BASE = $(patsubst input/%,%,$(basename $(shell find input -iname "*.promc"
 OUTPUT_DIRS = $(sort $(dir $(patsubst input/%,output/%,$(basename $(shell find input -iname "*.promc")))) $(sort $(dir $(wildcard output/*/))))
 
 OUTPUT_TRUTH = $(addprefix output/,$(INPUT_BASE:=_truth.slcio))
-OUTPUT_SIM = $(addprefix output/,$(INPUT_BASE:=-$(GEOM_BASE).slcio))
-OUTPUT_TRACKING = $(addprefix output/,$(INPUT_BASE:=-$(GEOM_BASE)_tracking.slcio))
-OUTPUT_PANDORA = $(addprefix output/,$(INPUT_BASE:=-$(GEOM_BASE)_pandora.slcio))
-OUTPUT_HEPSIM = $(addprefix output/,$(INPUT_BASE:=-$(GEOM_BASE)_hepsim.slcio))
+OUTPUT_SIM = $(addprefix output/,$(INPUT_BASE:=.slcio))
+OUTPUT_TRACKING = $(addprefix output/,$(INPUT_BASE:=_tracking.slcio))
+OUTPUT_PANDORA = $(addprefix output/,$(INPUT_BASE:=_pandora.slcio))
+OUTPUT_HEPSIM = $(addprefix output/,$(INPUT_BASE:=_hepsim.slcio))
 
-OUTPUT_TRACKEFF = $(OUTPUT_DIRS:=trackEff-$(GEOM_BASE).pdf)
-OUTPUT_TRACKEFF_NORM = $(OUTPUT_DIRS:=trackEff-norm-$(GEOM_BASE).pdf)
-OUTPUT_TRACKEFF_DEVANG = $(OUTPUT_DIRS:=trackEff-devAng-$(GEOM_BASE).pdf)
-OUTPUT_TRACKEFF_PT = $(OUTPUT_DIRS:=trackEff-pT-$(GEOM_BASE).pdf)
-OUTPUT_TRACKEFF_PT_NORM = $(OUTPUT_DIRS:=trackEff-pT-norm-$(GEOM_BASE).pdf)
-OUTPUT_CLUSTERDIST = $(OUTPUT_DIRS:=clusterDist-$(GEOM_BASE).pdf)
-OUTPUT_CLUSTERDIST_EWEIGHT = $(OUTPUT_DIRS:=clusterDist-energyWeighted-$(GEOM_BASE).pdf)
-OUTPUT_PFODIST = $(OUTPUT_DIRS:=pfoDist-$(GEOM_BASE).pdf)
+OUTPUT_TRACKEFF = $(OUTPUT_DIRS:=trackEff.pdf)
+OUTPUT_TRACKEFF_NORM = $(OUTPUT_DIRS:=trackEff-norm.pdf)
+OUTPUT_TRACKEFF_DEVANG = $(OUTPUT_DIRS:=trackEff-devAng.pdf)
+OUTPUT_TRACKEFF_PT = $(OUTPUT_DIRS:=trackEff-pT.pdf)
+OUTPUT_TRACKEFF_PT_NORM = $(OUTPUT_DIRS:=trackEff-pT-norm.pdf)
+OUTPUT_CLUSTERDIST = $(OUTPUT_DIRS:=clusterDist.pdf)
+OUTPUT_CLUSTERDIST_EWEIGHT = $(OUTPUT_DIRS:=clusterDist-energyWeighted.pdf)
+OUTPUT_PFODIST = $(OUTPUT_DIRS:=pfoDist.pdf)
 OUTPUT_DIAG = $(OUTPUT_TRACKEFF_DEVANG) $(OUTPUT_TRACKEFF) $(OUTPUT_TRACKEFF_NORM) $(OUTPUT_TRACKEFF_PT) $(OUTPUT_TRACKEFF_PT_NORM) \
 			  $(OUTPUT_CLUSTERDIST) $(OUTPUT_CLUSTERDIST_EWEIGHT) \
 			  $(OUTPUT_PFODIST)
@@ -52,11 +52,11 @@ ifeq ($(MAKECMDGOALS),hepsim)
 .INTERMEDIATE: $(OUTPUT_TRUTH) $(OUTPUT_SIM) $(OUTPUT_TRACKING) $(OUTPUT_PANDORA)
 endif
 
-.PHONY: all geom hepsim sim clean allclean
+.PHONY: all init hepsim sim clean allclean
 
 all: $(OUTPUT) $(GEOM) $(STRATEGIES)
 
-geom: $(GEOM) $(STRATEGIES)
+init: $(GEOM) $(STRATEGIES) $(OUTPUT_DIRS)
 
 hepsim: $(OUTPUT_HEPSIM)
 
@@ -92,8 +92,8 @@ $(PWD)/.lcsim/cache/$(LCSIM_CONDITIONS_PREFIX_ESCAPED)%.zip: $(GEOM_HEPREP)
 	mkdir -p $(@D)
 	cd $(GEOM_PATH) && zip -r $@ * &> $@.log
 
-$(GEOM_OVERLAP_CHECK): $(GEOM_GDML) macros/overlapCheck.cpp
-	root -b -q -l "macros/overlapCheck.cpp(\"$<\");" | tee $@
+$(GEOM_OVERLAP_CHECK): $(GEOM_GDML) tools/overlapCheck.cpp
+	root -b -q -l "tools/overlapCheck.cpp(\"$<\");" | tee $@
 
 ##### Define tracking strategy list target
 
@@ -124,7 +124,7 @@ output/%_truth.slcio: input/%.promc $(OUTPUT_DIRS)
 		&> $@.log
 
 # SLIC simulation of truth events
-output/%-$(GEOM_BASE).slcio: output/%_truth.slcio $(GEOM_LCDD) $(GEOM_PATH)/config/defaultILCCrossingAngle.mac \
+output/%.slcio: output/%_truth.slcio $(GEOM_LCDD) $(GEOM_PATH)/config/defaultILCCrossingAngle.mac \
 				nEventsPerRun
 	time bash -c "time slic -x -i $< \
 	    -g $(GEOM_LCDD) \
@@ -134,7 +134,7 @@ output/%-$(GEOM_BASE).slcio: output/%_truth.slcio $(GEOM_LCDD) $(GEOM_PATH)/conf
 	    &> $@.log
 
 # Digitization AND tracking with LCSim
-output/%-$(GEOM_BASE)_tracking.slcio: output/%-$(GEOM_BASE).slcio $(STRATEGIES) \
+output/%_tracking.slcio: output/%.slcio $(STRATEGIES) \
 				$(GEOM_PATH)/config/sid_dbd_prePandora_noOverlay.xml \
 				$$(LCSIM_CONDITIONS)
 	time bash -c "time java $(JAVA_OPTS) $(CONDITIONS_OPTS) \
@@ -146,7 +146,7 @@ output/%-$(GEOM_BASE)_tracking.slcio: output/%-$(GEOM_BASE).slcio $(STRATEGIES) 
 		&> $@.log
 
 # Pandora PFA with slicPandora
-output/%-$(GEOM_BASE)_pandora.slcio: output/%-$(GEOM_BASE)_tracking.slcio $(GEOM_PANDORA) $(GEOM_PATH)/config/PandoraSettings_$(GEOM_BASE).xml
+output/%_pandora.slcio: output/%_tracking.slcio $(GEOM_PANDORA) $(GEOM_PATH)/config/PandoraSettings_$(GEOM_BASE).xml
 	$(slicPandora_DIR)/bin/PandoraFrontend \
 		-g $(GEOM_PANDORA) \
 		-i $< \
@@ -155,34 +155,34 @@ output/%-$(GEOM_BASE)_pandora.slcio: output/%-$(GEOM_BASE)_tracking.slcio $(GEOM
 		&> $@.log
 
 # Trimming of slicPandora output
-output/%-$(GEOM_BASE)_hepsim.slcio: output/%-$(GEOM_BASE)_pandora.slcio output/%_truth.slcio
+output/%_hepsim.slcio: output/%_pandora.slcio output/%_truth.slcio
 	rm -f $@
 	$(FPADSIM)/lcio2hepsim/lcio2hepsim $^ $@ \
 		&> $@.log
 
 ##### Analysis target definitions
 
-%/trackEff-$(GEOM_BASE).pdf: tools/trackEff.go $(OUTPUT_TRACKING)
+%/trackEff.pdf: tools/trackEff.go $(OUTPUT_TRACKING)
 	go run tools/trackEff.go -t 40 -o $@ $(shell find $(@D) -name "*_tracking.slcio")
 
-%/trackEff-norm-$(GEOM_BASE).pdf: tools/trackEff.go $(OUTPUT_TRACKING)
+%/trackEff-norm.pdf: tools/trackEff.go $(OUTPUT_TRACKING)
 	go run tools/trackEff.go -t 40 -n -o $@ $(shell find $(@D) -name "*_tracking.slcio")
 
-%/trackEff-devAng-$(GEOM_BASE).pdf: tools/trackEff.go $(OUTPUT_TRACKING)
+%/trackEff-devAng.pdf: tools/trackEff.go $(OUTPUT_TRACKING)
 	go run tools/trackEff.go -t 40 -a -o $@ $(shell find $(@D) -name "*_tracking.slcio")
 
-%/trackEff-pT-$(GEOM_BASE).pdf: tools/trackEff.go $(OUTPUT_TRACKING)
+%/trackEff-pT.pdf: tools/trackEff.go $(OUTPUT_TRACKING)
 	go run tools/trackEff.go -t 40 -p -o $@ $(shell find $(@D) -name "*_tracking.slcio")
 
-%/trackEff-pT-norm-$(GEOM_BASE).pdf: tools/trackEff.go $(OUTPUT_TRACKING)
+%/trackEff-pT-norm.pdf: tools/trackEff.go $(OUTPUT_TRACKING)
 	go run tools/trackEff.go -t 40 -p -n -o $@ $(shell find $(@D) -name "*_tracking.slcio")
 
-%/clusterDist-$(GEOM_BASE).pdf: tools/clusterDist.go $(OUTPUT_PANDORA)
+%/clusterDist.pdf: tools/clusterDist.go $(OUTPUT_PANDORA)
 	go run tools/clusterDist.go -t 40 -o $@ $(shell find $(@D) -name "*_pandora.slcio")
 
-%/clusterDist-energyWeighted-$(GEOM_BASE).pdf: tools/clusterDist.go $(OUTPUT_PANDORA)
+%/clusterDist-energyWeighted.pdf: tools/clusterDist.go $(OUTPUT_PANDORA)
 	go run tools/clusterDist.go -t 40 -e -o $@ $(shell find $(@D) -name "*_pandora.slcio")
 
-%/pfoDist-$(GEOM_BASE).pdf: tools/PFODist.go $(OUTPUT_PANDORA)
+%/pfoDist.pdf: tools/PFODist.go $(OUTPUT_PANDORA)
 	go run tools/PFODist.go -t 40 -o $@ $(shell find $(@D) -name "*_pandora.slcio")
 
