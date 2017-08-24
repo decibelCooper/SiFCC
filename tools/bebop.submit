@@ -11,6 +11,8 @@ function runTask {
 	srun -n1 -c$SLURM_JOB_CPUS_PER_NODE singularity exec $singularityImage bash -lc "make -j$(($SLURM_JOB_CPUS_PER_NODE + 1)) $1" &
 }
 
+module load singularity
+
 singularity exec $singularityImage bash -lc "make -j4 init"
 
 i=0
