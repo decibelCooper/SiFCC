@@ -56,7 +56,7 @@ endif
 
 all: $(OUTPUT) $(GEOM) $(STRATEGIES)
 
-init: $(GEOM) $(STRATEGIES) $(OUTPUT_DIRS)
+init: $(GEOM) $(STRATEGIES)
 
 hepsim: $(OUTPUT_HEPSIM)
 
@@ -114,12 +114,9 @@ $(GEOM_OVERLAP_CHECK): $(GEOM_GDML) tools/overlapCheck.cpp
 
 ##### Define output targets
 
-# Make output dir
-$(OUTPUT_DIRS):
-	mkdir -p $@
-
 # Conversion of promc truth file to slcio
-output/%_truth.slcio: input/%.promc $(OUTPUT_DIRS)
+output/%_truth.slcio: input/%.promc
+	mkdir -p $@
 	java $(JAVA_OPTS) promc2lcio $(abspath $<) $(abspath $@) \
 		&> $@.log
 

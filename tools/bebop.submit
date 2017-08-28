@@ -1,14 +1,15 @@
 #!/bin/bash
 #SBATCH -p bdwall
-#SBATCH -N 1
+#SBATCH -N 14
 #SBATCH --time=1:00:00
 
-echo 4 > nEventsPerRun
 singularityImage="../fpadsim-v1.4.img"
 files=$(find input -iname "*.promc")
 
-function runTask {
-	srun -n1 -c$SLURM_JOB_CPUS_PER_NODE singularity exec $singularityImage bash -lc "make -j$(($SLURM_JOB_CPUS_PER_NODE + 1)) $1" &
+node=0
+function runTaskOnNode {
+	srun -lN1 -r$node singularity exec $singularityImage bash -lc "make -j$(($SLURM_CPUS_ON_NODE + 1)) $1" &
+	node=$(($node + 1))
 }
 
 module load singularity
@@ -21,14 +22,15 @@ for file in $files; do
 
 	i=$(($i + 1))
 
-	if [ "$(($i % $SLURM_JOB_CPUS_PER_NODE))" == "0" ]; then
-		runTask "$targets"
+	if [ "$(($i % $SLURM_CPUS_ON_NODE))" == "0" ]; then
+
+		runTaskOnNode "$targets"
 		targets=""
 	fi
 done
 
 if [ "$targets" != "" ]; then
-	runTask "$targets"
+	runTaskOnNode "$targets"
 fi
 
 wait
