@@ -15,7 +15,7 @@ files=$(find input -iname "*.promc")
 
 i=0
 for file in $files; do
-	targets="$targets $(echo $file | sed 's/^input\//output\//' | sed 's/\.promc/_hepsim.slcio/')"
+	targets="$targets $(echo $file | sed 's/^input\//output\//' | sed 's/\.promc/_digi.slcio/')"
 
 	i=$(($i + 1))
 
