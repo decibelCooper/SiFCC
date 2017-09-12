@@ -116,7 +116,7 @@ $(GEOM_OVERLAP_CHECK): $(GEOM_GDML) tools/overlapCheck.cpp
 
 # Conversion of promc truth file to slcio
 output/%_truth.slcio: input/%.promc
-	mkdir -p $@
+	mkdir -p $(@D)
 	java $(JAVA_OPTS) promc2lcio $(abspath $<) $(abspath $@) \
 		&> $@.log
 
@@ -140,6 +140,18 @@ output/%_tracking.slcio: output/%.slcio $(STRATEGIES) \
 		-DtrackingStrategies=$(STRATEGIES) \
 		-DoutputFile=$@ \
 		$(GEOM_PATH)/config/sid_dbd_prePandora_noOverlay.xml" \
+		&> $@.log
+
+# Digitization ONLY with LCSim
+output/%_digi.slcio: output/%.slcio $(STRATEGIES) \
+				$(GEOM_PATH)/config/lcsimDigi.xml \
+				$$(LCSIM_CONDITIONS)
+	time bash -c "time java $(JAVA_OPTS) $(CONDITIONS_OPTS) \
+		-jar $(CLICSOFT)/distribution/target/lcsim-distribution-*-bin.jar \
+		-DinputFile=$< \
+		-DtrackingStrategies=$(STRATEGIES) \
+		-DoutputFile=$@ \
+		$(GEOM_PATH)/config/lcsimDigi.xml" \
 		&> $@.log
 
 # Pandora PFA with slicPandora
