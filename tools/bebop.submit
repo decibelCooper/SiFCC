@@ -1,20 +1,17 @@
 #!/bin/bash
 #SBATCH -p bdwall
-#SBATCH -N 14
+#SBATCH -N 1
 #SBATCH --time=1:00:00
 
-singularityImage="../fpadsim-v1.4.img"
-files=$(find input -iname "*.promc")
+singularityImage=$1
 
 node=0
 function runTaskOnNode {
-	srun -lN1 -r$node singularity exec $singularityImage bash -lc "make -j$(($SLURM_CPUS_ON_NODE + 1)) $1" &
+	srun -N 1 -r $node singularity exec $singularityImage bash -lc "make -j$(($SLURM_CPUS_ON_NODE + 1)) $1" &
 	node=$(($node + 1))
 }
 
-module load singularity
-
-singularity exec $singularityImage bash -lc "make -j4 init"
+files=$(find input -iname "*.promc")
 
 i=0
 for file in $files; do
